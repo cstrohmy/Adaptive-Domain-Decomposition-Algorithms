@@ -1,5 +1,7 @@
 """
 Implementation of Whitney-decomposition algorithm for the cube, circle, and soon, Bezier curves etc. 
+
+Note-- below was generated with help of ChatGPT3oMini
 """
 
 import math
