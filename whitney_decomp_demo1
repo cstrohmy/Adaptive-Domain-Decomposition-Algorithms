@@ -1,0 +1,112 @@
+"""
+Implementation of Whitney-decomposition algorithm for the cube, circle, and soon, Bezier curves etc. 
+"""
+
+import math
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+
+# --- Cube geometry ---
+def length(cube):
+    """Return side length of cube Q_ij^k."""
+    _, _, k = cube
+    return 2 ** (-k)
+
+
+def center(cube):
+    """Return center point of cube Q_ij^k."""
+    i, j, k = cube
+    L = 2 ** (-k)
+    return ((i + 0.5) * L, (j + 0.5) * L)
+
+
+def children(cube):
+    """Return list of children cubes of Q_ij^k."""
+    i, j, k = cube
+    return [
+        (2 * i, 2 * j, k + 1),
+        (2 * i + 1, 2 * j, k + 1),
+        (2 * i, 2 * j + 1, k + 1),
+        (2 * i + 1, 2 * j + 1, k + 1)
+    ]
+
+
+# --- Distance functions ---
+def dist_to_square_boundary(pt):
+    """Distance from a point to the boundary of Q⁰ = [0,1]×[0,1]."""
+    x, y = pt
+    return min(x, 1 - x, y, 1 - y)
+
+
+def dist_to_circle_boundary(pt):
+    """Distance from a point to the circle (x-0.5)²+(y-0.5)² = (0.5)²."""
+    x, y = pt
+    d = math.hypot(x - 0.5, y - 0.5)
+    return abs(d - 0.5)
+
+
+# --- Whitney-like decomposition ---
+def whitney_decomposition(cube, dist_func, K=8):
+    """
+    Recursively subdivide the cube if the proxy distance (D) from its children's centers
+    to the boundary is less than the cube's side length L.
+
+    In other words, if D < L, we split the cube; otherwise we accept it.
+    """
+    L = length(cube)
+    # Stop if reached maximum depth.
+    if cube[2] == K:
+        return [cube]
+    child_cubes = children(cube)
+    # Compute proxy distance: the minimum distance among the centers of the children.
+    proxy = min(dist_func(center(child)) for child in child_cubes)
+    # Subdivide if the cube is "too big" relative to its distance to the boundary.
+    if proxy < L:
+        return sum((whitney_decomposition(child, dist_func, K) for child in child_cubes), [])
+    else:
+        return [cube]
+
+
+# --- Plotting function ---
+def plot_decomposition(decomp, title, boundary_patch):
+    """Plot the cubes in the decomposition along with the boundary."""
+    fig, ax = plt.subplots(figsize=(6, 6))
+    # Add the boundary patch first (so it lies underneath).
+    ax.add_patch(boundary_patch)
+    # Draw each Whitney cube with a higher z-order.
+    for cube in decomp:
+        i, j, k = cube
+        L = 2 ** (-k)
+        rect = patches.Rectangle(
+            (i * L, j * L), L, L,
+            edgecolor='blue', facecolor='none', lw=0.5, zorder=2
+        )
+        ax.add_patch(rect)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_aspect('equal')
+    ax.set_title(title)
+    plt.show()
+
+
+# --- Main execution ---
+def main():
+    base_cube = (0, 0, 0)
+    K = 7  # Maximum depth; smallest cubes have side length 2^-8.
+
+    # Decomposition for Q⁰'s own (square) boundary.
+    decomp_square = whitney_decomposition(base_cube, dist_to_square_boundary, K)
+    # Decomposition for the circle boundary.
+    decomp_circle = whitney_decomposition(base_cube, dist_to_circle_boundary, K)
+
+    # Create boundary patches.
+    square_patch = patches.Rectangle((0, 0), 1, 1, edgecolor='red', facecolor='none', lw=2, zorder=1)
+    circle_patch = patches.Circle((0.5, 0.5), 0.5, edgecolor='red', facecolor='none', lw=2, zorder=1)
+
+    plot_decomposition(decomp_square, "Whitney Decomposition for bd(Q⁰)", square_patch)
+    plot_decomposition(decomp_circle, "Whitney Decomposition for Circle", circle_patch)
+
+
+if __name__ == "__main__":
+    main()
