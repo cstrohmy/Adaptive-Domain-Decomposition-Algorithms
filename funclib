@@ -1,0 +1,65 @@
+"""
+TODO: Refector-- add comments, newline, reshuffle blocks
+TODO: Demo-- basic uses, recipes
+
+"""
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+import functools, itertools, operator
+import plotlib
+
+def identity(_): return _
+def plus_one(n: int): return functools.partial(operator.add, +1)
+
+def apply(func, val): return func(val)
+def evaluate(val, func): return func(val)
+
+def compose(func1, func2, /): return lambda _: func2(func1(_))
+
+def pair(f, g, /): return lambda _: (f(_), g(_))
+def diag(f, /): return pair(f, f)
+def pipe(*funcs): return lambda _: functools.reduce(evaluate, funcs, _)
+def chain(*funcs): return functools.reduce(compose, funcs, identity)
+
+def pmul(f, g): return lambda _: f(_) * g(_)
+def padd(f, g): return lambda _: f(_) + g(_)
+
+# TODO: implement
+def reduce_hopscotch(*funcpairs): ...
+
+
+# TODO: implement
+def curry(f): return lambda  *args: apply(functools.partial(f, args[0]), *args[0:])
+def uncurry(): ...
+def precomposition(phi): return lambda f: compose(phi, f)
+def postcomposition(psi): return lambda f: compose(f, psi)
+def solve(): ...
+
+
+# TODO: test
+def action(g): return lambda x: operator.mod(functools.partial(operator.matmul, g)(x), 1.)
+
+
+
+lerp_functions = lambda f0, f1: lambda t, x: (1 - t) * f0(x) + t * f1(x)
+
+
+
+if __name__ == '__main__':
+    f0 = lambda x: x
+    f1 = lambda x: x ** 2
+    f = lerp_functions(f0, f1)
+    fs = [functools.partial(f, s) for s in np.linspace(0, 1, 10)]
+
+    f = lambda x, y: x ** 2 + y ** 3
+    g = curry(f)
+    print(f(3, -2), g(3)(-2))
+
+    plotlib.plot(*fs)
+
+
+
+
+
